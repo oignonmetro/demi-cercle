@@ -13,15 +13,29 @@ function shuffle(array) {
   return result
 }
 
-// Angle entre 5° et 175° pour éviter les positions exactement aux extrémités.
+// Demi-largeur de la palette de score (zones 2|3|4|3|2, 6° chacune).
+export const PALETTE_HALF_WIDTH = 15
+export const PALETTE_ZONES = [
+  { from: -15, to: -9, points: 2 },
+  { from: -9, to: -3, points: 3 },
+  { from: -3, to: 3, points: 4 },
+  { from: 3, to: 9, points: 3 },
+  { from: 9, to: 15, points: 2 },
+]
+
+// Centre de palette entre 15° et 165° pour que les 30° de la palette
+// restent entièrement sur le demi-cercle.
 export function randomAngle() {
-  return Math.floor(Math.random() * 171) + 5
+  return Math.floor(Math.random() * 151) + 15
 }
 
-// Score entre 0 et 100 selon l'écart entre la position réelle et devinée (sur 180°).
-export function computeScore(actualAngle, guessedAngle) {
-  const diff = Math.abs(actualAngle - guessedAngle)
-  return Math.round(Math.max(0, 100 - (diff / 180) * 100))
+// Points (0 à 4) selon la zone de la palette où tombe l'aiguille devinée.
+export function computeScore(targetAngle, guessedAngle) {
+  const diff = Math.abs(targetAngle - guessedAngle)
+  if (diff <= 3) return 4
+  if (diff <= 9) return 3
+  if (diff <= PALETTE_HALF_WIDTH) return 2
+  return 0
 }
 
 // Attribue 3 spectres + une position d'aiguille à chaque joueur.

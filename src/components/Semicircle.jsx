@@ -1,17 +1,26 @@
 import { useCallback, useRef } from 'react'
 import { angleFromPointer, pointOnArc } from '../utils/angle'
+import { PALETTE_ZONES } from '../game/logic'
 import './Semicircle.css'
 
 const CX = 100
 const CY = 100
+const R = 92
 const NEEDLE_LENGTH = 78
+const ZONE_LABEL_RADIUS = 82
+
+function zonePath(fromAngle, toAngle) {
+  const outer = pointOnArc(CX, CY, R, toAngle)
+  const inner = pointOnArc(CX, CY, R, fromAngle)
+  return `M ${CX} ${CY} L ${outer.x} ${outer.y} A ${R} ${R} 0 0 1 ${inner.x} ${inner.y} Z`
+}
 
 export function Semicircle({
   spectrum,
   mode = 'display',
   angle = 90,
   onChange,
-  resultAngle,
+  targetAngle,
   score,
 }) {
   const svgRef = useRef(null)
@@ -46,9 +55,10 @@ export function Semicircle({
     draggingRef.current = false
   }
 
+  // La palette remplace l'aiguille "position réelle" : pas d'aiguille en
+  // affichage simple quand on montre la palette (phase d'écriture d'indice).
+  const showNeedle = !(mode === 'display' && targetAngle != null)
   const needle = pointOnArc(CX, CY, NEEDLE_LENGTH, angle)
-  const resultNeedle =
-    resultAngle != null ? pointOnArc(CX, CY, NEEDLE_LENGTH, resultAngle) : null
 
   return (
     <div className="semicircle">
@@ -64,24 +74,44 @@ export function Semicircle({
         <path d="M 8 100 A 92 92 0 0 1 192 100" className="semicircle__arc" />
         <line x1="8" y1="100" x2="192" y2="100" className="semicircle__base" />
 
-        {resultNeedle && (
+        {targetAngle != null &&
+          PALETTE_ZONES.map((zone) => {
+            const labelPos = pointOnArc(
+              CX,
+              CY,
+              ZONE_LABEL_RADIUS,
+              targetAngle + (zone.from + zone.to) / 2
+            )
+            return (
+              <g key={zone.from}>
+                <path
+                  d={zonePath(targetAngle + zone.from, targetAngle + zone.to)}
+                  className={`semicircle__zone semicircle__zone--${zone.points}`}
+                />
+                <text
+                  x={labelPos.x}
+                  y={labelPos.y}
+                  className="semicircle__zone-label"
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                >
+                  {zone.points}
+                </text>
+              </g>
+            )
+          })}
+
+        {showNeedle && (
           <line
             x1={CX}
             y1={CY}
-            x2={resultNeedle.x}
-            y2={resultNeedle.y}
-            className="semicircle__needle semicircle__needle--actual"
+            x2={needle.x}
+            y2={needle.y}
+            className={`semicircle__needle semicircle__needle--${
+              mode === 'result' ? 'guess' : 'main'
+            }`}
           />
         )}
-        <line
-          x1={CX}
-          y1={CY}
-          x2={needle.x}
-          y2={needle.y}
-          className={`semicircle__needle semicircle__needle--${
-            mode === 'result' ? 'guess' : 'main'
-          }`}
-        />
         {mode === 'drag' && (
           <circle cx={needle.x} cy={needle.y} r="9" className="semicircle__handle" />
         )}
@@ -94,7 +124,9 @@ export function Semicircle({
       </div>
 
       {mode === 'result' && score != null && (
-        <div className="semicircle__score">+{score} points pour l&apos;équipe</div>
+        <div className={`semicircle__score${score === 0 ? ' semicircle__score--zero' : ''}`}>
+          {score === 0 ? "Aucun point pour l'équipe" : `+${score} points pour l'équipe`}
+        </div>
       )}
     </div>
   )

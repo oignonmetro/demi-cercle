@@ -66,7 +66,7 @@ export function ClueWriting({ roomCode, room, playerId }) {
       </header>
 
       <div className="card">
-        <Semicircle spectrum={spectrum} mode="display" angle={round.needleAngle} />
+        <Semicircle spectrum={spectrum} mode="display" targetAngle={round.needleAngle} />
       </div>
 
       <div className="card field">

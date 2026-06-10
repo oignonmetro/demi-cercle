@@ -2,13 +2,14 @@
 
 Jeu de devinette à jouer entre amis, sur téléphone, dans la même pièce.
 
-Un joueur reçoit un spectre (ex. *Chaud ↔ Froid*) et une position d'aiguille
-sur un demi-cercle. Il écrit un indice. Les joueurs devinent ensuite à tour
-de rôle où se trouvait l'aiguille à partir des indices écrits par les autres,
-pendant que le reste de la salle — dont l'auteur de l'indice — voit l'aiguille
-du devineur bouger en direct sur son propre téléphone. Plus la position
-devinée est proche, plus l'auteur de l'indice et le devineur gagnent de
-points, et la position réelle est révélée à tous entre chaque tour.
+Un joueur reçoit un spectre (ex. *Chaud ↔ Froid*) et une palette de score
+cachée sur un demi-cercle (5 zones de 6° : 2 | 3 | 4 | 3 | 2 points). Il
+écrit un indice. Les joueurs placent ensuite à tour de rôle leur aiguille à
+partir des indices écrits par les autres, pendant que le reste de la salle
+— dont l'auteur de l'indice — voit l'aiguille du devineur bouger en direct
+sur son propre téléphone. La palette est révélée à tous entre chaque tour
+et l'équipe marque jusqu'à 4 points par manche (24 points max à 2 joueurs,
+36 à 3, 48 à 4).
 
 ## Démarrer une partie
 

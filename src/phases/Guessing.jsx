@@ -96,7 +96,7 @@ function GuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
             spectrum={spectrum}
             mode="result"
             angle={entry.guessedAngle}
-            resultAngle={entry.actualAngle}
+            targetAngle={entry.actualAngle}
             score={entry.score}
           />
         </div>

@@ -6,7 +6,7 @@ import { playAgain } from '../game/roomApi'
 export function Results({ roomCode, room, playerId }) {
   const [busy, setBusy] = useState(false)
   const isHost = room.hostId === playerId
-  const maxScore = room.turns.length * 100
+  const maxScore = room.turns.length * 4
 
   const handlePlayAgain = async () => {
     setBusy(true)
@@ -30,15 +30,6 @@ export function Results({ roomCode, room, playerId }) {
         </p>
       </div>
 
-      <div className="card legend">
-        <span className="legend__item">
-          <span className="legend__swatch legend__swatch--actual" /> position réelle
-        </span>
-        <span className="legend__item">
-          <span className="legend__swatch legend__swatch--guess" /> votre réponse
-        </span>
-      </div>
-
       {room.order.map((guesserId) => {
         const sourceId = getGuessSourceId(room.order, guesserId)
         const entries = room.results[guesserId]
@@ -56,7 +47,7 @@ export function Results({ roomCode, room, playerId }) {
                     spectrum={spectrum}
                     mode="result"
                     angle={entry.guessedAngle}
-                    resultAngle={entry.actualAngle}
+                    targetAngle={entry.actualAngle}
                     score={entry.score}
                   />
                 </div>
