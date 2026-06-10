@@ -1,0 +1,89 @@
+# Demi-Cercle
+
+Jeu de devinette à jouer entre amis, sur téléphone, dans la même pièce.
+
+Un joueur reçoit un spectre (ex. *Chaud ↔ Froid*) et une position d'aiguille
+sur un demi-cercle. Il écrit un indice. Tous les autres joueurs réfléchissent
+ensuite chacun de leur côté, puis devinent à tour de rôle où se trouvait
+l'aiguille à partir des indices écrits par les autres. Plus la position
+devinée est proche, plus les deux joueurs gagnent de points.
+
+## Démarrer une partie
+
+1. Ouvre le site sur ton téléphone (et idéalement ajoute-le à l'écran
+   d'accueil : « Ajouter à l'écran d'accueil » dans le menu du navigateur).
+2. Un joueur choisit un prénom et clique sur **Créer une partie** : un code
+   à 4 lettres apparaît.
+3. Les autres joueurs entrent ce code pour rejoindre la salle (2 à 4 joueurs).
+4. L'hôte choisit un pack de spectres puis démarre la partie.
+5. Chacun écrit ses 3 indices, puis devine à tour de rôle les indices reçus.
+6. Les scores s'affichent à la fin ; l'hôte peut relancer une nouvelle partie.
+
+### Personnaliser les spectres
+
+Depuis l'écran d'accueil, **« Gérer mes packs de spectres »** permet de créer
+un pack personnalisé (ex. des références internes à un groupe d'amis). Un
+code à 6 caractères est généré : il suffit de le communiquer aux autres
+joueurs pour qu'ils ajoutent le pack chez eux. Ce code est ensuite mémorisé
+sur chaque téléphone, pas besoin de le ressaisir à chaque partie.
+
+## Stack technique
+
+- **Frontend** : React + Vite, hébergé sur GitHub Pages
+- **Synchronisation temps réel** : Firebase Realtime Database
+
+## Configuration (Firebase)
+
+Le jeu a besoin d'une base Firebase Realtime Database (gratuite) pour
+synchroniser l'état des parties entre les téléphones.
+
+1. Crée un projet sur la [console Firebase](https://console.firebase.google.com/).
+2. Dans **Build > Realtime Database**, crée une base de données (mode test
+   ou avec les règles ci-dessous).
+3. Dans **Paramètres du projet > Vos applications**, ajoute une application
+   web et copie la configuration SDK.
+4. Pour le développement local : copie `.env.example` en `.env` et renseigne
+   les valeurs.
+5. Pour le déploiement : ajoute les mêmes valeurs comme **secrets** du dépôt
+   GitHub (Settings > Secrets and variables > Actions), avec les noms
+   `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`,
+   `VITE_FIREBASE_DATABASE_URL`, `VITE_FIREBASE_PROJECT_ID`,
+   `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`,
+   `VITE_FIREBASE_APP_ID`.
+
+### Règles de la base de données
+
+Usage privé entre amis : pas d'authentification, mais on limite la taille
+des écritures pour éviter les abus.
+
+```json
+{
+  "rules": {
+    "rooms": {
+      "$roomCode": {
+        ".read": true,
+        ".write": true
+      }
+    },
+    "packs": {
+      "$packCode": {
+        ".read": true,
+        ".write": "!data.exists()"
+      }
+    }
+  }
+}
+```
+
+## Développement local
+
+```bash
+npm install
+npm run dev
+```
+
+## Déploiement
+
+Le workflow `.github/workflows/deploy.yml` build et déploie automatiquement
+sur GitHub Pages à chaque push sur `main`. Active GitHub Pages dans
+**Settings > Pages > Source > GitHub Actions**.

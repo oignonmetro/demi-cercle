@@ -1,0 +1,74 @@
+.semicircle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.semicircle__svg {
+  width: 100%;
+  max-width: 320px;
+  touch-action: none;
+}
+
+.semicircle__svg--drag {
+  cursor: grab;
+}
+
+.semicircle__arc {
+  fill: none;
+  stroke: var(--color-surface-alt);
+  stroke-width: 3;
+}
+
+.semicircle__base {
+  stroke: var(--color-surface-alt);
+  stroke-width: 2;
+  stroke-dasharray: 4 4;
+}
+
+.semicircle__needle {
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.semicircle__needle--main {
+  stroke: var(--color-accent);
+}
+
+.semicircle__needle--guess {
+  stroke: var(--color-accent);
+}
+
+.semicircle__needle--actual {
+  stroke: var(--color-success);
+}
+
+.semicircle__handle {
+  fill: var(--color-accent);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+.semicircle__pivot {
+  fill: var(--color-text-muted);
+}
+
+.semicircle__labels {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.semicircle__label--right {
+  text-align: right;
+}
+
+.semicircle__score {
+  font-weight: 700;
+  color: var(--color-success);
+}
