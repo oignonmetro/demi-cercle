@@ -100,6 +100,10 @@ textarea:focus {
   font-size: 0.85rem;
 }
 
+.reroll-btn {
+  align-self: center;
+}
+
 .error {
   color: var(--color-danger);
   font-size: 0.9rem;

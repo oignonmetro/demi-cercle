@@ -122,7 +122,7 @@ export function Semicircle({
 
       {mode === 'result' && score != null && (
         <div className={`semicircle__score${score === 0 ? ' semicircle__score--zero' : ''}`}>
-          {score === 0 ? "Aucun point pour l'équipe" : `+${score} points pour l'équipe`}
+          {score === 0 ? 'Aucun point' : `+${score} points`}
         </div>
       )}
     </div>

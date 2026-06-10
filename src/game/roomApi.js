@@ -1,7 +1,7 @@
 import { ref, set, update, get, onValue, runTransaction, serverTimestamp } from 'firebase/database'
 import { db } from '../firebase'
 import { generateRoomCode } from './codes'
-import { assignRounds, buildTurns, computeScore } from './logic'
+import { assignRounds, buildTurns, computeScore, pickDifferentSpectrum, MAX_REROLLS } from './logic'
 
 export async function createRoom(playerId, playerName) {
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -74,6 +74,20 @@ export async function submitClue(roomCode, playerId, roundIndex, clue) {
 
 export async function setRoundReady(roomCode, playerId, roundIndex, ready) {
   await update(ref(db, `rooms/${roomCode}/rounds/${playerId}/${roundIndex}`), { ready })
+}
+
+// Change le spectre d'un indice à écrire (au plus MAX_REROLLS fois par
+// indice). Transaction sur la manche pour que le compteur reste fiable
+// même en cas de double clic.
+export async function rerollSpectrum(roomCode, playerId, roundIndex, spectraCount) {
+  const roundRef = ref(db, `rooms/${roomCode}/rounds/${playerId}/${roundIndex}`)
+  await runTransaction(roundRef, (round) => {
+    if (!round || round.ready) return round
+    if ((round.rerolls || 0) >= MAX_REROLLS) return round
+    round.spectrumIndex = pickDifferentSpectrum(spectraCount, round.spectrumIndex)
+    round.rerolls = (round.rerolls || 0) + 1
+    return round
+  })
 }
 
 // Position de l'aiguille du devineur, diffusée en direct aux autres joueurs

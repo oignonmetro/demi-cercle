@@ -3,6 +3,9 @@
 
 const ROUNDS_PER_PLAYER = 3
 
+// Nombre de changements de spectre autorisés par indice à écrire.
+export const MAX_REROLLS = 2
+
 // Mélange Fisher-Yates (ne modifie pas le tableau d'origine)
 function shuffle(array) {
   const result = [...array]
@@ -59,9 +62,17 @@ export function assignRounds(spectra, playerIds) {
         needleAngle: randomAngle(),
         clue: '',
         ready: false,
+        rerolls: 0,
       }))
   })
   return assignments
+}
+
+// Tire un nouveau spectre, différent du spectre actuel.
+export function pickDifferentSpectrum(spectraCount, currentIndex) {
+  if (spectraCount < 2) return currentIndex
+  const offset = Math.floor(Math.random() * (spectraCount - 1)) + 1
+  return (currentIndex + offset) % spectraCount
 }
 
 // Le joueur `playerId` devine les indices écrits par le joueur précédent dans l'ordre.

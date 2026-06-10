@@ -19,7 +19,8 @@ et l'équipe marque jusqu'à 4 points par manche (24 points max à 2 joueurs,
    à 4 lettres apparaît.
 3. Les autres joueurs entrent ce code pour rejoindre la salle (2 à 4 joueurs).
 4. L'hôte choisit un pack de spectres puis démarre la partie.
-5. Chacun écrit ses 3 indices, puis les devinettes se jouent un tour à la
+5. Chacun écrit ses 3 indices (avec la possibilité de changer de spectre
+   jusqu'à 2 fois par indice), puis les devinettes se jouent un tour à la
    fois : pendant qu'un joueur place son aiguille, les autres la voient
    bouger en direct, et la position réelle est révélée à la fin du tour.
 6. Les scores s'affichent à la fin ; l'hôte peut relancer une nouvelle partie.

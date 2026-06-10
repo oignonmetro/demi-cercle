@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Semicircle } from '../components/Semicircle'
-import { submitClue, setRoundReady, tryAdvanceToGuessing } from '../game/roomApi'
+import { submitClue, setRoundReady, tryAdvanceToGuessing, rerollSpectrum } from '../game/roomApi'
+import { MAX_REROLLS } from '../game/logic'
 
 export function ClueWriting({ roomCode, room, playerId }) {
   const myRounds = room.rounds[playerId]
@@ -37,6 +38,16 @@ export function ClueWriting({ roomCode, room, playerId }) {
   const round = myRounds[index]
   const spectrum = room.pack.spectra[round.spectrumIndex]
   const isLast = index === myRounds.length - 1
+  const rerollsLeft = MAX_REROLLS - (round.rerolls || 0)
+
+  const handleReroll = async () => {
+    setBusy(true)
+    try {
+      await rerollSpectrum(roomCode, playerId, index, room.pack.spectra.length)
+    } finally {
+      setBusy(false)
+    }
+  }
 
   const handleNext = async () => {
     const clue = draft.trim()
@@ -67,6 +78,13 @@ export function ClueWriting({ roomCode, room, playerId }) {
 
       <div className="card">
         <Semicircle spectrum={spectrum} mode="display" targetAngle={round.needleAngle} />
+        <button
+          className="btn btn--ghost btn--small reroll-btn"
+          onClick={handleReroll}
+          disabled={busy || rerollsLeft === 0}
+        >
+          🎲 Changer de spectre ({rerollsLeft})
+        </button>
       </div>
 
       <div className="card field">
