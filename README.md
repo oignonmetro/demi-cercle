@@ -3,7 +3,7 @@
 Jeu de devinette à jouer entre amis, sur téléphone, dans la même pièce.
 
 Un joueur reçoit un spectre (ex. *Chaud ↔ Froid*) et une palette de score
-cachée sur un demi-cercle (5 zones de 6° : 2 | 3 | 4 | 3 | 2 points). Il
+cachée sur un demi-cercle (5 zones de 7° : 2 | 3 | 4 | 3 | 2 points). Il
 écrit un indice. Les joueurs placent ensuite à tour de rôle leur aiguille à
 partir des indices écrits par les autres, pendant que le reste de la salle
 — dont l'auteur de l'indice — voit l'aiguille du devineur bouger en direct

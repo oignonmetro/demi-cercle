@@ -13,27 +13,28 @@ function shuffle(array) {
   return result
 }
 
-// Demi-largeur de la palette de score (zones 2|3|4|3|2, 6° chacune).
-export const PALETTE_HALF_WIDTH = 15
+// Demi-largeur de la palette de score (zones 2|3|4|3|2, 7° chacune).
+export const PALETTE_HALF_WIDTH = 17.5
 export const PALETTE_ZONES = [
-  { from: -15, to: -9, points: 2 },
-  { from: -9, to: -3, points: 3 },
-  { from: -3, to: 3, points: 4 },
-  { from: 3, to: 9, points: 3 },
-  { from: 9, to: 15, points: 2 },
+  { from: -17.5, to: -10.5, points: 2 },
+  { from: -10.5, to: -3.5, points: 3 },
+  { from: -3.5, to: 3.5, points: 4 },
+  { from: 3.5, to: 10.5, points: 3 },
+  { from: 10.5, to: 17.5, points: 2 },
 ]
 
-// Centre de palette entre 15° et 165° pour que les 30° de la palette
+// Centre de palette entre 18° et 162° pour que les 35° de la palette
 // restent entièrement sur le demi-cercle.
 export function randomAngle() {
-  return Math.floor(Math.random() * 151) + 15
+  return Math.floor(Math.random() * 145) + 18
 }
 
 // Points (0 à 4) selon la zone de la palette où tombe l'aiguille devinée.
+// En dehors de la palette : 0 point.
 export function computeScore(targetAngle, guessedAngle) {
   const diff = Math.abs(targetAngle - guessedAngle)
-  if (diff <= 3) return 4
-  if (diff <= 9) return 3
+  if (diff <= 3.5) return 4
+  if (diff <= 10.5) return 3
   if (diff <= PALETTE_HALF_WIDTH) return 2
   return 0
 }
