@@ -1,13 +1,7 @@
 import { ref, set, update, get, onValue, runTransaction, serverTimestamp } from 'firebase/database'
 import { db } from '../firebase'
 import { generateRoomCode } from './codes'
-import { assignRounds, getGuessSourceId, computeScore } from './logic'
-
-const EMPTY_GUESSES = [
-  { guessedAngle: 90, done: false },
-  { guessedAngle: 90, done: false },
-  { guessedAngle: 90, done: false },
-]
+import { assignRounds, buildTurns, computeScore } from './logic'
 
 export async function createRoom(playerId, playerName) {
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -65,12 +59,10 @@ export async function selectPack(roomCode, pack) {
 export async function startGame(roomCode, room) {
   const order = room.order
   const rounds = assignRounds(room.pack.spectra, order)
-  const guesses = Object.fromEntries(order.map((id) => [id, EMPTY_GUESSES.map((g) => ({ ...g }))]))
 
   await update(ref(db, `rooms/${roomCode}`), {
     status: 'clue-writing',
     rounds,
-    guesses,
     results: null,
   })
 }
@@ -83,17 +75,16 @@ export async function setRoundReady(roomCode, playerId, roundIndex, ready) {
   await update(ref(db, `rooms/${roomCode}/rounds/${playerId}/${roundIndex}`), { ready })
 }
 
-export async function submitGuess(roomCode, playerId, roundIndex, guessedAngle) {
-  await update(ref(db, `rooms/${roomCode}/guesses/${playerId}/${roundIndex}`), { guessedAngle })
-}
-
-export async function setGuessDone(roomCode, playerId, roundIndex, done) {
-  await update(ref(db, `rooms/${roomCode}/guesses/${playerId}/${roundIndex}`), { done })
+// Position de l'aiguille du devineur, diffusée en direct aux autres joueurs
+// pendant qu'il hésite. Écriture légère (un seul nombre), throttlée côté client.
+export async function setLiveAngle(roomCode, angle) {
+  await set(ref(db, `rooms/${roomCode}/liveAngle`), angle)
 }
 
 // Fait avancer la salle de "clue-writing" à "guessing" si tous les indices
-// sont prêts. Utilise une transaction pour qu'un seul client effectue le
-// changement même si plusieurs joueurs le détectent en même temps.
+// sont prêts, et construit la liste des tours de devinette. Utilise une
+// transaction pour qu'un seul client effectue le changement même si
+// plusieurs joueurs le détectent en même temps.
 export async function tryAdvanceToGuessing(roomCode) {
   const roomRef = ref(db, `rooms/${roomCode}`)
   await runTransaction(roomRef, (room) => {
@@ -103,45 +94,61 @@ export async function tryAdvanceToGuessing(roomCode) {
     )
     if (!allReady) return room
     room.status = 'guessing'
+    room.turns = buildTurns(room.order)
+    room.currentTurn = 0
+    room.turnPhase = 'guessing'
+    room.liveAngle = 90
     return room
   })
 }
 
-// Fait avancer la salle de "guessing" à "results", calcule les scores et
-// les écarts pour chaque manche. Idem, protégé par transaction.
-export async function tryAdvanceToResults(roomCode) {
+// Valide la réponse du devineur pour le tour courant : calcule le score,
+// l'ajoute aux deux joueurs concernés et passe le tour en phase "reveal"
+// (tout le monde voit la position réelle et les points gagnés).
+export async function submitTurnGuess(roomCode, turnIndex, guessedAngle) {
   const roomRef = ref(db, `rooms/${roomCode}`)
   await runTransaction(roomRef, (room) => {
     if (!room || room.status !== 'guessing') return room
-    const allDone = room.order.every((playerId) =>
-      (room.guesses?.[playerId] || []).every((g) => g.done)
-    )
-    if (!allDone) return room
+    if (room.turnPhase !== 'guessing' || room.currentTurn !== turnIndex) return room
 
-    const results = {}
-    room.order.forEach((playerId) => {
-      const sourceId = getGuessSourceId(room.order, playerId)
-      const sourceRounds = room.rounds[sourceId] || []
-      const playerGuesses = room.guesses[playerId] || []
+    const turn = room.turns[turnIndex]
+    const round = room.rounds[turn.sourceId][turn.roundIndex]
+    const score = computeScore(round.needleAngle, guessedAngle)
 
-      results[playerId] = sourceRounds.map((round, i) => {
-        const guess = playerGuesses[i] || { guessedAngle: 90 }
-        const score = computeScore(round.needleAngle, guess.guessedAngle)
-        room.players[playerId].score = (room.players[playerId].score || 0) + score
-        room.players[sourceId].score = (room.players[sourceId].score || 0) + score
-        return {
-          sourceId,
-          spectrumIndex: round.spectrumIndex,
-          clue: round.clue,
-          actualAngle: round.needleAngle,
-          guessedAngle: guess.guessedAngle,
-          score,
-        }
-      })
-    })
+    if (!room.results) room.results = {}
+    if (!room.results[turn.guesserId]) room.results[turn.guesserId] = []
+    room.results[turn.guesserId][turn.roundIndex] = {
+      sourceId: turn.sourceId,
+      spectrumIndex: round.spectrumIndex,
+      clue: round.clue,
+      actualAngle: round.needleAngle,
+      guessedAngle,
+      score,
+    }
+    room.players[turn.guesserId].score = (room.players[turn.guesserId].score || 0) + score
+    room.players[turn.sourceId].score = (room.players[turn.sourceId].score || 0) + score
+    room.liveAngle = guessedAngle
+    room.turnPhase = 'reveal'
+    return room
+  })
+}
 
-    room.results = results
-    room.status = 'results'
+// Passe au tour suivant après le "reveal", ou termine la partie après le
+// dernier tour. Protégé par transaction.
+export async function advanceTurn(roomCode, turnIndex) {
+  const roomRef = ref(db, `rooms/${roomCode}`)
+  await runTransaction(roomRef, (room) => {
+    if (!room || room.status !== 'guessing') return room
+    if (room.turnPhase !== 'reveal' || room.currentTurn !== turnIndex) return room
+    if (turnIndex + 1 >= room.turns.length) {
+      room.status = 'results'
+      room.turnPhase = null
+      room.liveAngle = null
+    } else {
+      room.currentTurn = turnIndex + 1
+      room.turnPhase = 'guessing'
+      room.liveAngle = 90
+    }
     return room
   })
 }
@@ -151,8 +158,11 @@ export async function playAgain(roomCode, room) {
   const updates = {
     status: 'lobby',
     rounds: null,
-    guesses: null,
     results: null,
+    turns: null,
+    currentTurn: null,
+    turnPhase: null,
+    liveAngle: null,
   }
   room.order.forEach((playerId) => {
     updates[`players/${playerId}/score`] = 0

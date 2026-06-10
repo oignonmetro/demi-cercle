@@ -55,3 +55,20 @@ export function getGuessSourceId(order, playerId) {
   const idx = order.indexOf(playerId)
   return order[(idx - 1 + n) % n]
 }
+
+// Construit la liste des tours de devinette, joués un par un devant tout le
+// monde : manche 0 de chaque joueur (A devine B, B devine C, ...), puis
+// manche 1, puis manche 2.
+export function buildTurns(order) {
+  const turns = []
+  for (let roundIndex = 0; roundIndex < ROUNDS_PER_PLAYER; roundIndex++) {
+    order.forEach((guesserId) => {
+      turns.push({
+        guesserId,
+        sourceId: getGuessSourceId(order, guesserId),
+        roundIndex,
+      })
+    })
+  }
+  return turns
+}

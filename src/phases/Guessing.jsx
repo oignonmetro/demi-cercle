@@ -1,83 +1,162 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Semicircle } from '../components/Semicircle'
-import { getGuessSourceId } from '../game/logic'
-import { submitGuess, setGuessDone, tryAdvanceToResults } from '../game/roomApi'
+import { setLiveAngle, submitTurnGuess, advanceTurn } from '../game/roomApi'
+
+const LIVE_THROTTLE_MS = 100
 
 export function Guessing({ roomCode, room, playerId }) {
-  const sourceId = getGuessSourceId(room.order, playerId)
-  const sourceRounds = room.rounds[sourceId]
-  const myGuesses = room.guesses[playerId]
+  const turnIndex = room.currentTurn ?? 0
+  const turn = room.turns?.[turnIndex]
+  if (!turn) return null
 
-  const startIndex = myGuesses.findIndex((g) => !g.done)
-  const [index, setIndex] = useState(startIndex === -1 ? 0 : startIndex)
-  const [angle, setAngle] = useState(myGuesses[startIndex === -1 ? 0 : startIndex]?.guessedAngle ?? 90)
+  // key={turnIndex} : remet l'état local (angle, etc.) à zéro à chaque tour.
+  return (
+    <GuessingTurn
+      key={turnIndex}
+      roomCode={roomCode}
+      room={room}
+      playerId={playerId}
+      turnIndex={turnIndex}
+      turn={turn}
+    />
+  )
+}
+
+function GuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
+  const round = room.rounds[turn.sourceId][turn.roundIndex]
+  const spectrum = room.pack.spectra[round.spectrumIndex]
+  const guesserName = room.players[turn.guesserId].name
+  const sourceName = room.players[turn.sourceId].name
+  const isGuesser = playerId === turn.guesserId
+  const isSource = playerId === turn.sourceId
+  const isReveal = room.turnPhase === 'reveal'
+  const isLastTurn = turnIndex === room.turns.length - 1
+  const progress = `Tour ${turnIndex + 1} / ${room.turns.length}`
+
+  const [angle, setAngle] = useState(room.liveAngle ?? 90)
   const [busy, setBusy] = useState(false)
+  const lastSentRef = useRef(0)
+  const pendingRef = useRef(null)
 
-  const allDone = myGuesses.every((g) => g.done)
+  useEffect(() => () => clearTimeout(pendingRef.current), [])
 
-  if (allDone) {
-    const doneCount = room.order.filter((id) => room.guesses[id].every((g) => g.done)).length
-    return (
-      <div className="app">
-        <header className="app__header">
-          <h1 className="app__title">Bien joué !</h1>
-        </header>
-        <div className="card">
-          <p className="text-muted">
-            En attente des autres joueurs ({doneCount}/{room.order.length})...
-          </p>
-          <ul className="player-list">
-            {room.order.map((id) => (
-              <li key={id}>
-                {room.players[id].name} {room.guesses[id].every((g) => g.done) ? '✅' : '⏳'}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    )
+  // Diffuse la position de l'aiguille en direct, au plus une écriture
+  // toutes les LIVE_THROTTLE_MS (avec un envoi final différé pour que la
+  // dernière position soit toujours transmise).
+  const handleDrag = (newAngle) => {
+    setAngle(newAngle)
+    const now = Date.now()
+    if (now - lastSentRef.current >= LIVE_THROTTLE_MS) {
+      lastSentRef.current = now
+      setLiveAngle(roomCode, newAngle).catch(() => {})
+    } else {
+      clearTimeout(pendingRef.current)
+      pendingRef.current = setTimeout(() => {
+        lastSentRef.current = Date.now()
+        setLiveAngle(roomCode, newAngle).catch(() => {})
+      }, LIVE_THROTTLE_MS)
+    }
   }
 
-  const round = sourceRounds[index]
-  const spectrum = room.pack.spectra[round.spectrumIndex]
-  const isLast = index === myGuesses.length - 1
-
-  const handleNext = async () => {
+  const handleValidate = async () => {
     setBusy(true)
     try {
-      await submitGuess(roomCode, playerId, index, angle)
-      await setGuessDone(roomCode, playerId, index, true)
-      if (!isLast) {
-        const next = index + 1
-        setIndex(next)
-        setAngle(myGuesses[next]?.guessedAngle ?? 90)
-      } else {
-        await tryAdvanceToResults(roomCode)
-      }
+      clearTimeout(pendingRef.current)
+      await submitTurnGuess(roomCode, turnIndex, angle)
     } finally {
       setBusy(false)
     }
   }
 
+  const handleNextTurn = async () => {
+    setBusy(true)
+    try {
+      await advanceTurn(roomCode, turnIndex)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (isReveal) {
+    const entry = room.results?.[turn.guesserId]?.[turn.roundIndex]
+    if (!entry) return null
+    return (
+      <div className="app">
+        <header className="app__header">
+          <h1 className="app__title">Résultat</h1>
+          <span className="progress-pill">{progress}</span>
+        </header>
+
+        <div className="card">
+          <p className="text-muted">
+            {sourceName} ➜ {guesserName}
+          </p>
+          <p className="clue-text">« {entry.clue} »</p>
+          <Semicircle
+            spectrum={spectrum}
+            mode="result"
+            angle={entry.guessedAngle}
+            resultAngle={entry.actualAngle}
+            score={entry.score}
+          />
+          <p className="text-center">
+            {sourceName} et {guesserName} gagnent {entry.score} points chacun.
+          </p>
+        </div>
+
+        {isGuesser ? (
+          <button className="btn" onClick={handleNextTurn} disabled={busy}>
+            {isLastTurn ? 'Voir les résultats' : 'Tour suivant'}
+          </button>
+        ) : (
+          <p className="text-muted text-center">
+            En attente que {guesserName} passe à la suite...
+          </p>
+        )}
+      </div>
+    )
+  }
+
+  if (isGuesser) {
+    return (
+      <div className="app">
+        <header className="app__header">
+          <h1 className="app__title">À toi de deviner !</h1>
+          <span className="progress-pill">{progress}</span>
+        </header>
+
+        <div className="card">
+          <p className="text-muted">Indice de {sourceName} :</p>
+          <p className="clue-text">« {round.clue} »</p>
+          <Semicircle spectrum={spectrum} mode="drag" angle={angle} onChange={handleDrag} />
+          <p className="text-muted text-center">
+            Fais glisser l&apos;aiguille — les autres voient tes hésitations en direct !
+          </p>
+        </div>
+
+        <button className="btn" onClick={handleValidate} disabled={busy}>
+          Valider ma réponse
+        </button>
+      </div>
+    )
+  }
+
+  // Spectateur (dont l'auteur de l'indice) : on suit l'aiguille en direct.
   return (
     <div className="app">
       <header className="app__header">
-        <h1 className="app__title">Devine la position</h1>
-        <span className="progress-pill">
-          {index + 1} / {sourceRounds.length}
-        </span>
+        <h1 className="app__title">
+          {isSource ? `${guesserName} devine ton indice` : `Au tour de ${guesserName}`}
+        </h1>
+        <span className="progress-pill">{progress}</span>
       </header>
 
       <div className="card">
-        <p className="text-muted">Indice de {room.players[sourceId].name} :</p>
+        <p className="text-muted">Indice de {sourceName} :</p>
         <p className="clue-text">« {round.clue} »</p>
-        <Semicircle spectrum={spectrum} mode="drag" angle={angle} onChange={setAngle} />
-        <p className="text-muted text-center">Fais glisser l&apos;aiguille pour placer ta réponse.</p>
+        <Semicircle spectrum={spectrum} mode="display" angle={room.liveAngle ?? 90} />
+        <p className="text-muted text-center">{guesserName} place son aiguille en direct...</p>
       </div>
-
-      <button className="btn" onClick={handleNext} disabled={busy}>
-        {isLast ? 'Valider' : 'Valider et continuer'}
-      </button>
     </div>
   )
 }

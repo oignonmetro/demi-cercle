@@ -3,10 +3,12 @@
 Jeu de devinette à jouer entre amis, sur téléphone, dans la même pièce.
 
 Un joueur reçoit un spectre (ex. *Chaud ↔ Froid*) et une position d'aiguille
-sur un demi-cercle. Il écrit un indice. Tous les autres joueurs réfléchissent
-ensuite chacun de leur côté, puis devinent à tour de rôle où se trouvait
-l'aiguille à partir des indices écrits par les autres. Plus la position
-devinée est proche, plus les deux joueurs gagnent de points.
+sur un demi-cercle. Il écrit un indice. Les joueurs devinent ensuite à tour
+de rôle où se trouvait l'aiguille à partir des indices écrits par les autres,
+pendant que le reste de la salle — dont l'auteur de l'indice — voit l'aiguille
+du devineur bouger en direct sur son propre téléphone. Plus la position
+devinée est proche, plus l'auteur de l'indice et le devineur gagnent de
+points, et la position réelle est révélée à tous entre chaque tour.
 
 ## Démarrer une partie
 
@@ -16,7 +18,9 @@ devinée est proche, plus les deux joueurs gagnent de points.
    à 4 lettres apparaît.
 3. Les autres joueurs entrent ce code pour rejoindre la salle (2 à 4 joueurs).
 4. L'hôte choisit un pack de spectres puis démarre la partie.
-5. Chacun écrit ses 3 indices, puis devine à tour de rôle les indices reçus.
+5. Chacun écrit ses 3 indices, puis les devinettes se jouent un tour à la
+   fois : pendant qu'un joueur place son aiguille, les autres la voient
+   bouger en direct, et la position réelle est révélée à la fin du tour.
 6. Les scores s'affichent à la fin ; l'hôte peut relancer une nouvelle partie.
 
 ### Personnaliser les spectres
