@@ -34,19 +34,19 @@
 }
 
 .semicircle__zone--2 {
-  fill: #fbbf24;
+  fill: #d4a32e;
 }
 
 .semicircle__zone--3 {
-  fill: #f97316;
+  fill: #d36623;
 }
 
 .semicircle__zone--4 {
-  fill: #60a5fa;
+  fill: #588eda;
 }
 
 .semicircle__zone-label {
-  font-size: 6.05px;
+  font-size: 6.655px;
   font-weight: 700;
   fill: #1e1b2e;
   pointer-events: none;
