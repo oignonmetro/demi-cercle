@@ -85,6 +85,9 @@ export const DEFAULT_PACKS = [
       { left: 'LFI', right: 'PS' },
       { left: 'PS', right: 'Macronie' },
       { left: 'Présidentiable', right: 'Pas présidentiable' },
+      { left: 'Charismatique', right: 'Giga boloss' },
+      { left: 'Guidé par ses convictions', right: 'Pur opportuniste' },
+      { left: 'Mémorable', right: 'Oubliable' },
     ],
   },
 ]
