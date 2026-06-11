@@ -93,7 +93,6 @@ export function ClueWriting({ roomCode, room, playerId }) {
           id="clue"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Ex. Un plat italien classique"
           maxLength={120}
           autoFocus
         />

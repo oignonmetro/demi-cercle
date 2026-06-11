@@ -4,7 +4,7 @@
 const ROUNDS_PER_PLAYER = 3
 
 // Nombre de changements de spectre autorisés par indice à écrire.
-export const MAX_REROLLS = 2
+export const MAX_REROLLS = 3
 
 // Mélange Fisher-Yates (ne modifie pas le tableau d'origine)
 function shuffle(array) {
