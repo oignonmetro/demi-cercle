@@ -7,6 +7,7 @@ import {
   computeScore,
   mergeSpectra,
   pickDifferentSpectrum,
+  randomAngle,
   MAX_REROLLS,
 } from './logic'
 
@@ -96,14 +97,15 @@ export async function setRoundReady(roomCode, playerId, roundIndex, ready) {
 }
 
 // Change le spectre d'un indice à écrire (au plus MAX_REROLLS fois par
-// indice). Transaction sur la manche pour que le compteur reste fiable
-// même en cas de double clic.
+// indice), ainsi que la position de la palette. Transaction sur la manche
+// pour que le compteur reste fiable même en cas de double clic.
 export async function rerollSpectrum(roomCode, playerId, roundIndex, spectraCount) {
   const roundRef = ref(db, `rooms/${roomCode}/rounds/${playerId}/${roundIndex}`)
   await runTransaction(roundRef, (round) => {
     if (!round || round.ready) return round
     if ((round.rerolls || 0) >= MAX_REROLLS) return round
     round.spectrumIndex = pickDifferentSpectrum(spectraCount, round.spectrumIndex)
+    round.needleAngle = randomAngle()
     round.rerolls = (round.rerolls || 0) + 1
     return round
   })

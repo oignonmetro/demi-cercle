@@ -105,7 +105,6 @@ export const DEFAULT_PACKS = [
       { left: 'Anciens', right: 'Modernes' },
       { left: 'Platon', right: 'Aristote' },
       { left: 'Descartes', right: 'Hume' },
-      { left: 'Rousseau', right: 'Hobbes' },
       { left: 'Sartre', right: 'Camus' },
       { left: 'Woke de son époque', right: 'Problématique' },
       { left: 'Lisible', right: 'Illisible' },
