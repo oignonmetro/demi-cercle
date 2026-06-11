@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { savePack, loadPack } from '../game/packApi'
+import { savePack, loadPack, updatePack } from '../game/packApi'
 import { addCustomPackRef, getCustomPackRefs, removeCustomPackRef } from '../game/customPacks'
 
 const EMPTY_ROW = () => ({ left: '', right: '' })
@@ -7,10 +7,12 @@ const EMPTY_ROW = () => ({ left: '', right: '' })
 export function PackManager({ onBack }) {
   const [packs, setPacks] = useState(getCustomPackRefs())
   const [creating, setCreating] = useState(false)
+  const [editingId, setEditingId] = useState(null)
   const [name, setName] = useState('')
   const [spectra, setSpectra] = useState([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()])
   const [joinCode, setJoinCode] = useState('')
   const [savedCode, setSavedCode] = useState(null)
+  const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -20,6 +22,42 @@ export function PackManager({ onBack }) {
 
   const addSpectrumRow = () => setSpectra((prev) => [...prev, EMPTY_ROW()])
   const removeSpectrumRow = (index) => setSpectra((prev) => prev.filter((_, i) => i !== index))
+
+  const handleStartCreate = () => {
+    setEditingId(null)
+    setName('')
+    setSpectra([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()])
+    setSavedCode(null)
+    setNotice('')
+    setError('')
+    setCreating(true)
+  }
+
+  const handleEdit = async (id) => {
+    setBusy(true)
+    setError('')
+    setSavedCode(null)
+    setNotice('')
+    try {
+      const pack = await loadPack(id)
+      setName(pack.name)
+      setSpectra(pack.spectra.map((s) => ({ left: s.left, right: s.right })))
+      setEditingId(id)
+      setCreating(true)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleCancel = () => {
+    setCreating(false)
+    setEditingId(null)
+    setName('')
+    setSpectra([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()])
+    setError('')
+  }
 
   const handleSave = async () => {
     const valid = spectra
@@ -37,11 +75,19 @@ export function PackManager({ onBack }) {
     setBusy(true)
     setError('')
     try {
-      const code = await savePack(name.trim(), valid)
-      addCustomPackRef(code, name.trim())
-      setPacks(getCustomPackRefs())
-      setSavedCode(code)
+      if (editingId) {
+        await updatePack(editingId, name.trim(), valid)
+        addCustomPackRef(editingId, name.trim())
+        setPacks(getCustomPackRefs())
+        setNotice('Pack mis à jour !')
+      } else {
+        const code = await savePack(name.trim(), valid)
+        addCustomPackRef(code, name.trim())
+        setPacks(getCustomPackRefs())
+        setSavedCode(code)
+      }
       setCreating(false)
+      setEditingId(null)
       setName('')
       setSpectra([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()])
     } catch (err) {
@@ -88,6 +134,12 @@ export function PackManager({ onBack }) {
         </div>
       )}
 
+      {notice && (
+        <div className="card">
+          <p>{notice}</p>
+        </div>
+      )}
+
       <div className="card">
         <h2>Packs personnalisés</h2>
         {packs.length === 0 && (
@@ -99,6 +151,13 @@ export function PackManager({ onBack }) {
               <li key={p.id} className="pack-list__item">
                 <span>{p.name}</span>
                 <span className="code-pill">{p.id}</span>
+                <button
+                  className="btn btn--ghost btn--small"
+                  onClick={() => handleEdit(p.id)}
+                  disabled={busy}
+                >
+                  Modifier
+                </button>
                 <button className="btn btn--ghost btn--small" onClick={() => handleRemove(p.id)}>
                   Retirer
                 </button>
@@ -123,13 +182,14 @@ export function PackManager({ onBack }) {
       </div>
 
       {!creating && (
-        <button className="btn" onClick={() => setCreating(true)}>
+        <button className="btn" onClick={handleStartCreate}>
           + Créer un pack
         </button>
       )}
 
       {creating && (
         <div className="card field">
+          <h2>{editingId ? 'Modifier le pack' : 'Créer un pack'}</h2>
           <label htmlFor="pack-name">Nom du pack</label>
           <input
             id="pack-name"
@@ -169,7 +229,10 @@ export function PackManager({ onBack }) {
             + Ajouter un spectre
           </button>
           <button className="btn" onClick={handleSave} disabled={busy}>
-            Enregistrer le pack
+            {editingId ? 'Enregistrer les modifications' : 'Enregistrer le pack'}
+          </button>
+          <button className="btn btn--ghost" onClick={handleCancel} disabled={busy}>
+            Annuler
           </button>
         </div>
       )}

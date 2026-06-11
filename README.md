@@ -32,7 +32,10 @@ Depuis l'écran d'accueil, **« Gérer mes packs de spectres »** permet de cré
 un pack personnalisé (ex. des références internes à un groupe d'amis). Un
 code à 6 caractères est généré : il suffit de le communiquer aux autres
 joueurs pour qu'ils ajoutent le pack chez eux. Ce code est ensuite mémorisé
-sur chaque téléphone, pas besoin de le ressaisir à chaque partie.
+sur chaque téléphone, pas besoin de le ressaisir à chaque partie. Le bouton
+**« Modifier »** permet à tout moment d'ajouter, retirer ou changer les
+spectres d'un pack existant (le code reste le même, les autres joueurs
+récupèrent la nouvelle version automatiquement).
 
 ## Stack technique
 
@@ -75,12 +78,16 @@ des écritures pour éviter les abus.
     "packs": {
       "$packCode": {
         ".read": true,
-        ".write": "!data.exists()"
+        ".write": true
       }
     }
   }
 }
 ```
+
+> Si ta base existe déjà avec une ancienne règle `".write": "!data.exists()"`
+> sur `packs`, mets-la à jour vers `".write": true` pour pouvoir éditer les
+> packs personnalisés depuis l'app.
 
 ## Développement local
 

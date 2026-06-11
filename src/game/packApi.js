@@ -1,4 +1,4 @@
-import { ref, set, get } from 'firebase/database'
+import { ref, set, update, get } from 'firebase/database'
 import { db } from '../firebase'
 import { generatePackCode } from './codes'
 
@@ -22,4 +22,10 @@ export async function loadPack(packCode) {
     throw new Error('Pack introuvable.')
   }
   return { id, ...snapshot.val() }
+}
+
+// Met à jour le nom et les spectres d'un pack existant (sans changer son code).
+export async function updatePack(packCode, name, spectra) {
+  const id = packCode.trim().toUpperCase()
+  await update(ref(db, `packs/${id}`), { name, spectra })
 }
