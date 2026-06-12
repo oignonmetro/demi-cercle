@@ -149,7 +149,6 @@ export const DEFAULT_PACKS = [
       { left: 'Métro', right: 'Vélo' },
       { left: 'Bien desservi en transports', right: 'Désert de transports' },
       { left: 'Piéton', right: 'Automobiliste' },
-      { left: 'Zone 1', right: 'Grande couronne' },
     ],
   },
 ]
