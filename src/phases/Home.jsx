@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createRoom, joinRoom } from '../game/roomApi'
+import { userMessage } from '../game/errors'
 
 const NAME_STORAGE_KEY = 'demi-cercle:player-name'
 
@@ -25,7 +26,7 @@ export function Home({ playerId, onEnterRoom, onOpenPacks }) {
       const roomCode = await createRoom(playerId, name.trim())
       onEnterRoom(roomCode)
     } catch (err) {
-      setError(err.message)
+      setError(userMessage(err))
     } finally {
       setBusy(false)
     }
@@ -47,7 +48,7 @@ export function Home({ playerId, onEnterRoom, onOpenPacks }) {
       await joinRoom(roomCode, playerId, name.trim())
       onEnterRoom(roomCode)
     } catch (err) {
-      setError(err.message)
+      setError(userMessage(err))
     } finally {
       setBusy(false)
     }

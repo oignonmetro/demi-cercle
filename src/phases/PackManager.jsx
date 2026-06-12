@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { savePack, loadPack, updatePack } from '../game/packApi'
 import { addCustomPackRef, getCustomPackRefs, removeCustomPackRef } from '../game/customPacks'
+import { userMessage } from '../game/errors'
 
 const EMPTY_ROW = () => ({ left: '', right: '' })
 
@@ -45,7 +46,7 @@ export function PackManager({ onBack }) {
       setEditingId(id)
       setCreating(true)
     } catch (err) {
-      setError(err.message)
+      setError(userMessage(err))
     } finally {
       setBusy(false)
     }
@@ -91,7 +92,7 @@ export function PackManager({ onBack }) {
       setName('')
       setSpectra([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()])
     } catch (err) {
-      setError(err.message)
+      setError(userMessage(err))
     } finally {
       setBusy(false)
     }
@@ -107,7 +108,7 @@ export function PackManager({ onBack }) {
       setPacks(getCustomPackRefs())
       setJoinCode('')
     } catch (err) {
-      setError(err.message)
+      setError(userMessage(err))
     } finally {
       setBusy(false)
     }

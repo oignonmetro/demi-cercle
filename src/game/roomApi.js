@@ -1,6 +1,7 @@
 import { ref, set, update, get, onValue, runTransaction, serverTimestamp } from 'firebase/database'
 import { db } from '../firebase'
 import { generateRoomCode } from './codes'
+import { AppError } from './errors'
 import {
   assignRounds,
   buildTurns,
@@ -30,21 +31,21 @@ export async function createRoom(playerId, playerName) {
     })
     return roomCode
   }
-  throw new Error("Impossible de générer un code de salle, réessayez.")
+  throw new AppError("Impossible de générer un code de salle, réessayez.")
 }
 
 export async function joinRoom(roomCode, playerId, playerName) {
   const roomRef = ref(db, `rooms/${roomCode}`)
   const snapshot = await get(roomRef)
   if (!snapshot.exists()) {
-    throw new Error("Cette salle n'existe pas.")
+    throw new AppError("Cette salle n'existe pas.")
   }
   const room = snapshot.val()
   if (room.players?.[playerId]) {
     return
   }
   if (room.status !== 'lobby') {
-    throw new Error('La partie a déjà commencé.')
+    throw new AppError('La partie a déjà commencé.')
   }
   const order = [...(room.order || []), playerId]
   await update(roomRef, {

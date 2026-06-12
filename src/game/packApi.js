@@ -1,6 +1,7 @@
 import { ref, set, update, get } from 'firebase/database'
 import { db } from '../firebase'
 import { generatePackCode } from './codes'
+import { AppError } from './errors'
 
 export async function savePack(name, spectra) {
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -12,14 +13,14 @@ export async function savePack(name, spectra) {
     await set(packRef, { name, spectra, createdAt: Date.now() })
     return packCode
   }
-  throw new Error('Impossible de générer un code de pack, réessayez.')
+  throw new AppError('Impossible de générer un code de pack, réessayez.')
 }
 
 export async function loadPack(packCode) {
   const id = packCode.trim().toUpperCase()
   const snapshot = await get(ref(db, `packs/${id}`))
   if (!snapshot.exists()) {
-    throw new Error('Pack introuvable.')
+    throw new AppError('Pack introuvable.')
   }
   return { id, ...snapshot.val() }
 }

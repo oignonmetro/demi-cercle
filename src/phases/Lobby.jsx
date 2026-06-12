@@ -4,6 +4,7 @@ import { getCustomPackRefs } from '../game/customPacks'
 import { loadPack } from '../game/packApi'
 import { addPack, removePack, startGame } from '../game/roomApi'
 import { mergeSpectra } from '../game/logic'
+import { userMessage } from '../game/errors'
 
 export function Lobby({ roomCode, room, playerId }) {
   const isHost = room.hostId === playerId
@@ -27,7 +28,7 @@ export function Lobby({ roomCode, room, playerId }) {
         await addPack(roomCode, pack)
       }
     } catch (err) {
-      setError(err.message)
+      setError(userMessage(err))
     } finally {
       setBusy(false)
     }
@@ -44,7 +45,7 @@ export function Lobby({ roomCode, room, playerId }) {
         await addPack(roomCode, pack)
       }
     } catch (err) {
-      setError(err.message)
+      setError(userMessage(err))
     } finally {
       setBusy(false)
     }
@@ -56,7 +57,7 @@ export function Lobby({ roomCode, room, playerId }) {
     try {
       await startGame(roomCode, room)
     } catch (err) {
-      setError(err.message)
+      setError(userMessage(err))
     } finally {
       setBusy(false)
     }

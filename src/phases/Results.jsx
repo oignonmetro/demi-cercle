@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Semicircle } from '../components/Semicircle'
 import { ScoreGauge } from '../components/ScoreGauge'
 import { getGuessSourceId } from '../game/logic'
@@ -14,11 +14,14 @@ export function Results({ roomCode, room, playerId }) {
   const maxScore = room.turns.length * 4
 
   // Score cumulé après chaque tour, dans l'ordre de révélation de la cinématique.
-  const cumulativeScores = [0]
-  room.turns.forEach((turn) => {
-    const score = room.results[turn.guesserId][turn.roundIndex].score
-    cumulativeScores.push(cumulativeScores[cumulativeScores.length - 1] + score)
-  })
+  const cumulativeScores = useMemo(() => {
+    const scores = [0]
+    room.turns.forEach((turn) => {
+      const score = room.results[turn.guesserId][turn.roundIndex].score
+      scores.push(scores[scores.length - 1] + score)
+    })
+    return scores
+  }, [room.turns, room.results])
 
   // Avance automatiquement d'une manche à la fois pendant la cinématique.
   useEffect(() => {
@@ -26,6 +29,14 @@ export function Results({ roomCode, room, playerId }) {
     const timer = setTimeout(() => setTurnIndex((i) => i + 1), TURN_DURATION_MS)
     return () => clearTimeout(timer)
   }, [turnIndex, room.turns.length])
+
+  // Petit retour haptique quand la manche révélée rapporte le score maximum.
+  useEffect(() => {
+    if (turnIndex >= room.turns.length) return
+    if (cumulativeScores[turnIndex + 1] - cumulativeScores[turnIndex] === 4) {
+      navigator.vibrate?.(200)
+    }
+  }, [turnIndex, room.turns.length, cumulativeScores])
 
   const handlePlayAgain = async () => {
     setBusy(true)
@@ -53,7 +64,11 @@ export function Results({ roomCode, room, playerId }) {
 
         <div className="card text-center">
           <h2>Score de l&apos;équipe</h2>
-          <p className="score-total">
+          {/* key={turnIndex} : relance l'animation de pulse à chaque manche */}
+          <p
+            key={turnIndex}
+            className={`score-total${entry.score === 4 ? ' score-total--pulse' : ''}`}
+          >
             {cumulativeScores[turnIndex + 1]} <span className="text-muted">/ {maxScore}</span>
           </p>
           <ScoreGauge score={cumulativeScores[turnIndex + 1]} maxScore={maxScore} />
