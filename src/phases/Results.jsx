@@ -10,8 +10,8 @@ import { vibrate } from '../utils/haptics'
 
 // Cinématique de révélation : chaque manche passe par un temps de suspense
 // (l'aiguille du joueur seule) puis la révélation (palette + score ajouté).
-const SUSPENSE_MS = 1200
-const REVEAL_MS = 2800
+const SUSPENSE_MS = 2500
+const REVEAL_MS = 6000
 // Balayage lent de la jauge sur l'écran de score final.
 const FINALE_SWEEP_MS = 2400
 // Part du score max à partir de laquelle on fête le résultat aux confettis
