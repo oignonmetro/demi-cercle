@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { savePack, loadPack, updatePack } from '../game/packApi'
+import { savePack, loadPack, updatePack, findPacksByName } from '../game/packApi'
 import { addCustomPackRef, getCustomPackRefs, removeCustomPackRef } from '../game/customPacks'
 import { userMessage } from '../game/errors'
 
@@ -12,6 +12,9 @@ export function PackManager({ onBack }) {
   const [name, setName] = useState('')
   const [spectra, setSpectra] = useState([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()])
   const [joinCode, setJoinCode] = useState('')
+  const [searchName, setSearchName] = useState('')
+  // null = aucune recherche lancée ; [] = recherche sans résultat.
+  const [searchResults, setSearchResults] = useState(null)
   const [savedCode, setSavedCode] = useState(null)
   const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
@@ -119,6 +122,24 @@ export function PackManager({ onBack }) {
     setPacks(getCustomPackRefs())
   }
 
+  const handleSearch = async () => {
+    if (!searchName.trim()) return
+    setBusy(true)
+    setError('')
+    try {
+      setSearchResults(await findPacksByName(searchName))
+    } catch (err) {
+      setError(userMessage(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleAddFound = (pack) => {
+    addCustomPackRef(pack.id, pack.name)
+    setPacks(getCustomPackRefs())
+  }
+
   return (
     <div className="app">
       <header className="app__header">
@@ -187,6 +208,57 @@ export function PackManager({ onBack }) {
         <button className="btn btn--secondary" onClick={handleJoin} disabled={busy}>
           Ajouter ce pack
         </button>
+      </div>
+
+      <div className="card field">
+        <label htmlFor="pack-search">Code perdu ? Retrouve un pack par son nom</label>
+        <p className="text-muted">
+          Utile si le pack a disparu de ta liste (cache du navigateur effacé) : il existe
+          toujours sur le serveur.
+        </p>
+        <input
+          id="pack-search"
+          value={searchName}
+          onChange={(e) => setSearchName(e.target.value)}
+          placeholder="Ex. Soirée entre potes"
+          maxLength={30}
+        />
+        <button className="btn btn--secondary" onClick={handleSearch} disabled={busy}>
+          Rechercher
+        </button>
+        {searchResults && searchResults.length === 0 && (
+          <p className="text-muted">Aucun pack trouvé avec ce nom.</p>
+        )}
+        {searchResults && searchResults.length > 0 && (
+          <ul className="pack-list">
+            {searchResults.map((p) => {
+              const alreadyAdded = packs.some((ref) => ref.id === p.id)
+              return (
+                <li key={p.id} className="pack-list__item">
+                  <div className="pack-list__item-info">
+                    <span>{p.name}</span>
+                    <span className="code-pill">{p.id}</span>
+                  </div>
+                  <p className="text-muted">
+                    {p.spectraCount} spectres
+                    {p.createdAt
+                      ? ` · créé le ${new Date(p.createdAt).toLocaleDateString('fr-FR')}`
+                      : ''}
+                  </p>
+                  <div className="pack-list__item-actions">
+                    <button
+                      className="btn btn--ghost btn--small"
+                      onClick={() => handleAddFound(p)}
+                      disabled={alreadyAdded}
+                    >
+                      {alreadyAdded ? 'Déjà dans ta liste' : 'Ajouter à ma liste'}
+                    </button>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        )}
       </div>
 
       {!creating && (

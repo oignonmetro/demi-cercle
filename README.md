@@ -76,8 +76,8 @@ des écritures pour éviter les abus.
       }
     },
     "packs": {
+      ".read": true,
       "$packCode": {
-        ".read": true,
         ".write": true
       }
     }
@@ -88,6 +88,10 @@ des écritures pour éviter les abus.
 > Si ta base existe déjà avec une ancienne règle `".write": "!data.exists()"`
 > sur `packs`, mets-la à jour vers `".write": true` pour pouvoir éditer les
 > packs personnalisés depuis l'app.
+
+> La règle `".read": true` au niveau de `packs` (et non plus de `$packCode`)
+> est nécessaire à la fonction « retrouver un pack par son nom » : pense à la
+> mettre à jour dans la console Firebase si ta base existe déjà.
 
 ## Développement local
 
