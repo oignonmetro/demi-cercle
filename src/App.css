@@ -154,14 +154,34 @@ textarea:focus {
 
 .pack-list__item {
   display: flex;
-  align-items: center;
-  gap: 0.6rem;
+  flex-direction: column;
+  gap: 0.5rem;
   background: var(--color-surface-alt);
   border-radius: var(--radius);
-  padding: 0.5rem 0.9rem;
+  padding: 0.6rem 0.9rem;
 }
 
-.pack-list__item span:first-child {
+.pack-list__item-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.pack-list__item-info span:first-child {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pack-list__item-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pack-list__item-actions .btn {
   flex: 1;
 }
 

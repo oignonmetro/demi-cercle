@@ -150,18 +150,25 @@ export function PackManager({ onBack }) {
           <ul className="pack-list">
             {packs.map((p) => (
               <li key={p.id} className="pack-list__item">
-                <span>{p.name}</span>
-                <span className="code-pill">{p.id}</span>
-                <button
-                  className="btn btn--ghost btn--small"
-                  onClick={() => handleEdit(p.id)}
-                  disabled={busy}
-                >
-                  Modifier
-                </button>
-                <button className="btn btn--ghost btn--small" onClick={() => handleRemove(p.id)}>
-                  Retirer
-                </button>
+                <div className="pack-list__item-info">
+                  <span>{p.name}</span>
+                  <span className="code-pill">{p.id}</span>
+                </div>
+                <div className="pack-list__item-actions">
+                  <button
+                    className="btn btn--ghost btn--small"
+                    onClick={() => handleEdit(p.id)}
+                    disabled={busy}
+                  >
+                    Modifier
+                  </button>
+                  <button
+                    className="btn btn--ghost btn--small"
+                    onClick={() => handleRemove(p.id)}
+                  >
+                    Retirer
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
