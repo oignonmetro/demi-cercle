@@ -30,22 +30,3 @@ export async function updatePack(packCode, name, spectra) {
   const id = packCode.trim().toUpperCase()
   await update(ref(db, `packs/${id}`), { name, spectra })
 }
-
-// Retrouve des packs par leur nom (insensible à la casse), pour récupérer un
-// code perdu (cache du navigateur effacé). La collection est lue en entier et
-// filtrée côté client : elle reste petite, et la base n'indexe pas les noms.
-export async function findPacksByName(name) {
-  const wanted = name.trim().toLowerCase()
-  if (!wanted) return []
-  const snapshot = await get(ref(db, 'packs'))
-  if (!snapshot.exists()) return []
-  return Object.entries(snapshot.val())
-    .filter(([, pack]) => (pack.name || '').toLowerCase().includes(wanted))
-    .map(([id, pack]) => ({
-      id,
-      name: pack.name,
-      spectraCount: Array.isArray(pack.spectra) ? pack.spectra.length : 0,
-      createdAt: pack.createdAt ?? null,
-    }))
-    .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
-}
