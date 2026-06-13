@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Semicircle } from '../components/Semicircle'
+import { useSmoothAngle } from '../hooks/useSmoothAngle'
 import { setLiveAngle, submitTurnGuess, advanceTurn } from '../game/roomApi'
 
 const LIVE_THROTTLE_MS = 100
@@ -148,8 +149,15 @@ function GuessingTurn({ roomCode, room, playerId, turnIndex, turn }) {
       <div className="card">
         <p className="text-muted">Indice de {sourceName} :</p>
         <p className="clue-text">{round.clue}</p>
-        <Semicircle spectrum={spectrum} mode="display" angle={room.liveAngle ?? 90} />
+        <LiveSemicircle spectrum={spectrum} liveAngle={room.liveAngle ?? 90} />
       </div>
     </div>
   )
+}
+
+// Aiguille suivie en direct par les spectateurs : on lisse l'angle reçu du
+// réseau pour une rotation continue plutôt que des sauts saccadés.
+function LiveSemicircle({ spectrum, liveAngle }) {
+  const smoothAngle = useSmoothAngle(liveAngle)
+  return <Semicircle spectrum={spectrum} mode="display" angle={smoothAngle} />
 }
