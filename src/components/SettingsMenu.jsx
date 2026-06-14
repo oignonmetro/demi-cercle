@@ -1,12 +1,38 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { isHapticsEnabled, setHapticsEnabled } from '../utils/haptics'
 import './SettingsMenu.css'
+
+// Marge avant de considérer qu'on a défilé suffisamment pour masquer ou
+// réafficher l'engrenage (ignore les petits rebonds d'overscroll).
+const SCROLL_THRESHOLD = 8
 
 // Engrenage discret en haut à droite, ouvrant une petite fenêtre de
 // paramètres accessible à tout moment de la partie.
 export function SettingsMenu() {
   const [open, setOpen] = useState(false)
   const [haptics, setHaptics] = useState(isHapticsEnabled)
+  const [hidden, setHidden] = useState(false)
+  const lastScrollY = useRef(0)
+
+  // Masque l'engrenage quand on défile vers le bas (la page glisse vers le
+  // haut), le réaffiche dès qu'on remonte ou qu'on est proche du haut.
+  useEffect(() => {
+    lastScrollY.current = window.scrollY
+    const handleScroll = () => {
+      const y = window.scrollY
+      const delta = y - lastScrollY.current
+      if (y <= SCROLL_THRESHOLD) {
+        setHidden(false)
+      } else if (delta > SCROLL_THRESHOLD) {
+        setHidden(true)
+      } else if (delta < -SCROLL_THRESHOLD) {
+        setHidden(false)
+      }
+      lastScrollY.current = y
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const toggleHaptics = () => {
     const next = !haptics
@@ -19,7 +45,7 @@ export function SettingsMenu() {
   return (
     <>
       <button
-        className="settings-gear"
+        className={`settings-gear${hidden && !open ? ' settings-gear--hidden' : ''}`}
         aria-label="Paramètres"
         onClick={() => setOpen(true)}
       >
